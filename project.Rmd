@@ -1,0 +1,89 @@
+---
+title: "STA 325 Project"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyr)
+library(e1071)
+library(tidyverse)
+```
+
+```{r}
+UFC <- read.csv("data/preprocessed_data.csv")
+```
+
+```{r}
+UFC <- UFC %>%
+  mutate(win = ifelse(Winner == "Red", 1, 0))
+```
+
+```{r}
+UFC %>%
+  head()
+```
+
+```{r}
+UFC <- UFC %>%
+  mutate(Winner = as.factor(Winner))
+```
+
+```{r}
+set.seed(123)
+smp_size <- floor(0.1 * nrow(UFC))
+train_ind <- sample(seq_len(nrow(UFC)), size = smp_size)
+
+train <- UFC[train_ind, ]
+test <- UFC[-train_ind, ]
+```
+
+```{r}
+svmfit <- svm(Winner ~ ., data = train, kernel = "linear",
+              cost = 1, scale=FALSE)
+```
+
+```{r}
+ypred <- predict(svmfit, test)
+length(ypred[test$Winner==ypred]) / length(ypred)
+```
+
+```{r}
+set.seed(123)
+smp_size <- floor(0.5 * nrow(UFC)) # increasing size of training data (linear kernel could not handle this)
+train_ind <- sample(seq_len(nrow(UFC)), size = smp_size)
+
+train <- UFC[train_ind, ]
+test <- UFC[-train_ind, ]
+```
+
+```{r}
+svmfit <- svm(Winner ~ ., data = train, kernel = "radial",
+              gamma = 1, cost = 1, scale=FALSE)
+```
+
+```{r}
+ypred <- predict(svmfit, test)
+length(ypred[test$Winner==ypred]) / length(ypred)
+```
+
+# Logistic Regression
+
+
+
+
+```{r}
+lmfit <- glm(win ~ . -Winner, data = train, family = binomial)
+#summary(lmfit)
+```
+
+
+```{r}
+probabilities <- predict(lmfit, test, type="response")
+#probabilities
+ypred <- ifelse(probabilities > 0.5, 1, 0)
+length(ypred[test$win==ypred]) / length(ypred)
+```
