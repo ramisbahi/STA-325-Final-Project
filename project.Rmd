@@ -34,11 +34,15 @@ UFC <- UFC %>%
 
 ```{r}
 set.seed(123)
-smp_size <- floor(0.1 * nrow(UFC))
+smp_size <- floor(0.01 * nrow(UFC))
 train_ind <- sample(seq_len(nrow(UFC)), size = smp_size)
 
 train <- UFC[train_ind, ]
 test <- UFC[-train_ind, ]
+```
+
+```{r}
+train
 ```
 
 ```{r}
@@ -52,15 +56,6 @@ length(ypred[test$Winner==ypred]) / length(ypred)
 ```
 
 ```{r}
-set.seed(123)
-smp_size <- floor(0.5 * nrow(UFC)) # increasing size of training data (linear kernel could not handle this)
-train_ind <- sample(seq_len(nrow(UFC)), size = smp_size)
-
-train <- UFC[train_ind, ]
-test <- UFC[-train_ind, ]
-```
-
-```{r}
 svmfit <- svm(Winner ~ ., data = train, kernel = "radial",
               gamma = 1, cost = 1, scale=FALSE)
 ```
@@ -70,20 +65,43 @@ ypred <- predict(svmfit, test)
 length(ypred[test$Winner==ypred]) / length(ypred)
 ```
 
-# Logistic Regression
-
-
-
 
 ```{r}
-lmfit <- glm(win ~ . -Winner, data = train, family = binomial)
-#summary(lmfit)
+set.seed(123)
+smp_size <- floor(0.5 * nrow(UFC))
+train_ind <- sample(seq_len(nrow(UFC)), size = smp_size)
+
+train <- UFC[train_ind, ]
+test <- UFC[-train_ind, ]
+```
+
+```{r}
+lmfit <- glm(win ~ . -Winner, data = train, family="binomial")
+summary(lmfit)
 ```
 
 
 ```{r}
-probabilities <- predict(lmfit, test, type="response")
-#probabilities
-ypred <- ifelse(probabilities > 0.5, 1, 0)
+pred <- predict(lmfit, test, type = "response")
+ypred <- ifelse(pred > 0.5, 1, 0)
 length(ypred[test$win==ypred]) / length(ypred)
+```
+
+```{r}
+library(randomForest)
+```
+
+```{r}
+rf.UFC <- randomForest(Winner~.-win, data = train, 
+                          mtry = 6, importance = TRUE)
+```
+
+```{r}
+imp <- importance(rf.UFC)
+#imp
+imp[order(imp[,"MeanDecreaseAccuracy"], decreasing=TRUE),]
+```
+
+```{r}
+imp[order(imp[,"MeanDecreaseGini"], decreasing=TRUE),]
 ```
