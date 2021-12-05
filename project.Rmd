@@ -118,14 +118,20 @@ UFC.new <- UFC %>%
                                                                                                                   ifelse(weight_class_WomenStrawweight == 1, "Women Strawweight", "None"))))))))))))))
         )
 
+
 UFC.new <- UFC.new %>%
-  select(-c(R_win_percent, B_win_percent))
+  dplyr::select(-c(R_win_percent, B_win_percent, losses_dif, draw_dif))
 
 UFC.new <- UFC.new %>%
   mutate(R_stance = as.factor(R_stance),
          B_stance = as.factor(B_stance),
          weightclass = as.factor(weightclass))
-UFC.new <- UFC.new[161:231]
+UFC.new <- UFC.new[161:229]
+```
+
+```{r}
+UFC.new <- UFC.new %>%
+  mutate(win = as.factor(win))
 ```
 
 ```{r}
@@ -135,10 +141,10 @@ UFC.new %>%
 
 ```{r}
 set.seed(123)
-smp_size <- floor(0.01 * nrow(UFC))
-train_ind <- sample(seq_len(nrow(UFC)), size = smp_size)
-train <- UFC[train_ind, ]
-test <- UFC[-train_ind, ]
+smp_size <- floor(0.01 * nrow(UFC.new))
+train_ind <- sample(seq_len(nrow(UFC.new)), size = smp_size)
+train <- UFC.new[train_ind, ]
+test <- UFC.new[-train_ind, ]
 ```
 
 ```{r}
@@ -146,36 +152,36 @@ train
 ```
 
 ```{r}
-svmfit <- svm(Winner ~ ., data = train, kernel = "linear",
+svmfit <- svm(win ~ ., data = train, kernel = "linear",
               cost = 1, scale=FALSE)
 ```
 
 ```{r}
 ypred <- predict(svmfit, test)
-length(ypred[test$Winner==ypred]) / length(ypred)
+length(ypred[test$win==ypred]) / length(ypred)
 ```
 
 ```{r}
-svmfit <- svm(Winner ~ ., data = train, kernel = "radial",
+svmfit <- svm(win ~ ., data = train, kernel = "radial",
               gamma = 1, cost = 1, scale=FALSE)
 ```
 
 ```{r}
 ypred <- predict(svmfit, test)
-length(ypred[test$Winner==ypred]) / length(ypred)
+length(ypred[test$win==ypred]) / length(ypred)
 ```
 
 
 ```{r}
 set.seed(123)
-smp_size <- floor(0.5 * nrow(UFC))
-train_ind <- sample(seq_len(nrow(UFC)), size = smp_size)
-train <- UFC[train_ind, ]
-test <- UFC[-train_ind, ]
+smp_size <- floor(0.5 * nrow(UFC.new))
+train_ind <- sample(seq_len(nrow(UFC.new)), size = smp_size)
+train <- UFC.new[train_ind, ]
+test <- UFC.new[-train_ind, ]
 ```
 
 ```{r}
-lmfit <- glm(win ~ . -Winner, data = train, family="binomial")
+lmfit <- glm(win ~ ., data = train, family="binomial")
 summary(lmfit)
 ```
 
@@ -192,14 +198,14 @@ library(randomForest)
 
 ```{r}
 set.seed(123)
-smp_size <- floor(0.1 * nrow(UFC))
-train_ind <- sample(seq_len(nrow(UFC)), size = smp_size)
-train <- UFC[train_ind, ]
-test <- UFC[-train_ind, ]
+smp_size <- floor(0.1 * nrow(UFC.new))
+train_ind <- sample(seq_len(nrow(UFC.new)), size = smp_size)
+train <- UFC.new[train_ind, ]
+test <- UFC.new[-train_ind, ]
 ```
 
 ```{r}
-rf.UFC <- randomForest(Winner~.-win, data = train, 
+rf.UFC <- randomForest(win~., data = train, 
                           mtry = 6, importance = TRUE)
 ```
 
@@ -210,5 +216,38 @@ imp[order(imp[,"MeanDecreaseAccuracy"], decreasing=TRUE),]
 ```
 
 ```{r}
-imp[order(imp[,"MeanDecreaseGini"], decreasing=TRUE),]
+#imp[order(imp[,"MeanDecreaseGini"], decreasing=TRUE),]
+```
+
+Back to linear regression (with top 10 variables from RF importance as our only predictors)...
+
+```{r}
+set.seed(123)
+smp_size <- floor(0.7 * nrow(UFC.new))
+train_ind <- sample(seq_len(nrow(UFC.new)), size = smp_size)
+train <- UFC.new[train_ind, ]
+test <- UFC.new[-train_ind, ]
+```
+
+avg_opp_SIG_STR_landed_dif     -0.83527219  4.67609552           4.62119152        3.5854830
+avg_opp_DISTANCE_att_dif       -3.23686801  5.82802622           4.57043866        3.6564104
+avg_opp_GROUND_landed_dif      -1.77018032  5.80859004           4.57027841        4.9531791
+avg_opp_LEG_landed_dif         -2.98326158  5.48150179           4.32517419        4.0299477
+winperc_dif                     1.47369324  4.04125065           4.22766229        4.2451224
+avg_TOTAL_STR_att_dif           0.39604036  3.77409284           4.03862101        4.7240696
+avg_HEAD_landed_dif             0.88275577  3.48660467           3.97494239        4.9114632
+avg_opp_HEAD_att_dif           -3.69152181  5.62056703           3.88778532        3.3877236
+avg_DISTANCE_landed_dif        -0.19862821  3.49156305           3.67812377        3.6752626
+avg_TD_pct_dif  
+
+
+```{r}
+lmfit <- glm(win ~ avg_opp_SIG_STR_landed_dif + avg_opp_DISTANCE_att_dif + avg_opp_GROUND_landed_dif + avg_opp_LEG_landed_dif + winperc_dif + avg_TOTAL_STR_att_dif + avg_HEAD_landed_dif + avg_opp_HEAD_att_dif + avg_DISTANCE_landed_dif + avg_TD_pct_dif, data = train, family="binomial")
+summary(lmfit)
+```
+
+```{r}
+pred <- predict(lmfit, test, type = "response")
+ypred <- ifelse(pred > 0.5, 1, 0)
+length(ypred[test$win==ypred]) / length(ypred)
 ```
