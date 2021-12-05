@@ -17,9 +17,20 @@ library(tidyverse)
 UFC <- read.csv("data/preprocessed_data.csv")
 ```
 
-```{r}
-UFC <- UFC %>%
-  mutate(win = ifelse(Winner == "Red", 1, 0))
+```{r preprocessing}
+UFC <- UFC %>% 
+  mutate(win = ifelse(Winner == "Red", 1, 0)) 
+UFC.new <- UFC%>% 
+  mutate(winstreakdif = R_longest_win_streak - B_longest_win_streak) %>% 
+  mutate(windif = R_wins - B_wins) %>% 
+  mutate(R_win_percent = R_wins/(R_wins + R_losses + R_draw)) %>% 
+  mutate(B_win_percent = B_wins/(B_wins + B_losses + B_draw)) %>% 
+  mutate(winpercdif = R_win_percent - B_win_percent) %>% 
+  mutate(heightdif = R_Height_cms - B_Height_cms) %>% 
+  mutate(reachdif = R_Reach_cms - B_Reach_cms) %>% 
+  mutate(weightdif = R_Weight_lbs - B_Weight_lbs) %>% 
+  mutate(agedif = R_age - B_age) %>% 
+  mutate(avg_SIG_STR_pctdif = R_avg_SIG_STR_pct - B_avg_SIG_STR_pct)
 ```
 
 ```{r}
@@ -36,7 +47,6 @@ UFC <- UFC %>%
 set.seed(123)
 smp_size <- floor(0.01 * nrow(UFC))
 train_ind <- sample(seq_len(nrow(UFC)), size = smp_size)
-
 train <- UFC[train_ind, ]
 test <- UFC[-train_ind, ]
 ```
@@ -70,7 +80,6 @@ length(ypred[test$Winner==ypred]) / length(ypred)
 set.seed(123)
 smp_size <- floor(0.5 * nrow(UFC))
 train_ind <- sample(seq_len(nrow(UFC)), size = smp_size)
-
 train <- UFC[train_ind, ]
 test <- UFC[-train_ind, ]
 ```
