@@ -18,29 +18,119 @@ UFC <- read.csv("data/preprocessed_data.csv")
 ```
 
 ```{r preprocessing}
-UFC <- UFC %>% 
-  mutate(win = ifelse(Winner == "Red", 1, 0)) 
-UFC.new <- UFC%>% 
-  mutate(winstreakdif = R_longest_win_streak - B_longest_win_streak) %>% 
-  mutate(windif = R_wins - B_wins) %>% 
-  mutate(R_win_percent = R_wins/(R_wins + R_losses + R_draw)) %>% 
-  mutate(B_win_percent = B_wins/(B_wins + B_losses + B_draw)) %>% 
-  mutate(winpercdif = R_win_percent - B_win_percent) %>% 
-  mutate(heightdif = R_Height_cms - B_Height_cms) %>% 
-  mutate(reachdif = R_Reach_cms - B_Reach_cms) %>% 
-  mutate(weightdif = R_Weight_lbs - B_Weight_lbs) %>% 
-  mutate(agedif = R_age - B_age) %>% 
-  mutate(avg_SIG_STR_pctdif = R_avg_SIG_STR_pct - B_avg_SIG_STR_pct)
+UFC.new <- UFC %>% 
+  mutate(R_win_percent = R_wins/(R_wins + R_losses + R_draw),
+         B_win_percent = B_wins/(B_wins + B_losses + B_draw),
+         R_win_percent = ifelse(is.na(R_win_percent), 0, R_win_percent),
+         B_win_percent = ifelse(is.na(B_win_percent), 0, B_win_percent),
+         win = ifelse(Winner == "Red", 1, 0),
+         longest_win_streak_dif = R_longest_win_streak - B_longest_win_streak,
+         winperc_dif = R_win_percent - B_win_percent,
+         height_dif = R_Height_cms - B_Height_cms,
+         reach_dif = R_Reach_cms - B_Reach_cms,
+         weight_dif = R_Weight_lbs - B_Weight_lbs,
+         age_dif = R_age - B_age,
+         avg_KD_dif = R_avg_KD - B_avg_KD,
+         avg_opp_KD_dif = R_avg_opp_KD - B_avg_opp_KD,
+         avg_SIG_STR_pct_dif = R_avg_SIG_STR_pct - B_avg_SIG_STR_pct,
+         avg_opp_SIG_STR_pct_dif = R_avg_opp_SIG_STR_pct - B_avg_opp_SIG_STR_pct,
+         avg_TD_pct_dif = R_avg_TD_pct - B_avg_TD_pct,
+         avg_opp_TD_pct_dif = R_avg_opp_TD_pct - B_avg_opp_TD_pct,
+         avg_SUB_ATT_dif = R_avg_SUB_ATT - B_avg_SUB_ATT,
+         avg_opp_SUB_ATT_dif = R_avg_opp_SUB_ATT - B_avg_opp_SUB_ATT,
+         avg_REV_dif = R_avg_REV - B_avg_REV,
+         avg_opp_REV_dif = R_avg_opp_REV - B_avg_opp_REV,
+         avg_SIG_STR_att_dif = R_avg_SIG_STR_att - B_avg_SIG_STR_att,
+         avg_SIG_STR_landed_dif = R_avg_SIG_STR_landed - B_avg_SIG_STR_landed,
+         avg_opp_SIG_STR_att_dif = R_avg_opp_SIG_STR_att - B_avg_opp_SIG_STR_att,
+         avg_opp_SIG_STR_landed_dif = R_avg_opp_SIG_STR_landed - B_avg_opp_SIG_STR_landed,
+         avg_TOTAL_STR_att_dif = R_avg_TOTAL_STR_att - B_avg_TOTAL_STR_att,
+         avg_TOTAL_STR_landed_dif = R_avg_TOTAL_STR_landed - B_avg_TOTAL_STR_landed,
+         avg_opp_TOTAL_STR_att_dif = R_avg_opp_TOTAL_STR_att - B_avg_opp_TOTAL_STR_att,
+         avg_opp_TOTAL_STR_landed_dif = R_avg_opp_TOTAL_STR_landed - B_avg_opp_TOTAL_STR_landed,
+         avg_TD_att_dif = R_avg_TD_att - B_avg_TD_att,
+         avg_TD_landed_dif = R_avg_TD_landed - B_avg_TD_landed, 
+         avg_opp_TD_att_dif = R_avg_opp_TD_att - B_avg_opp_TD_att,
+         avg_opp_TD_landed_dif = R_avg_opp_TD_landed - B_avg_opp_TD_landed,
+        avg_HEAD_att_dif = R_avg_HEAD_att - B_avg_HEAD_att,
+        avg_HEAD_landed_dif = R_avg_HEAD_landed - B_avg_HEAD_landed,
+        avg_opp_HEAD_att_dif = R_avg_opp_HEAD_att - B_avg_opp_HEAD_att,
+        avg_opp_HEAD_landed_dif = R_avg_opp_HEAD_landed - B_avg_opp_HEAD_landed,
+        avg_BODY_att_dif = R_avg_BODY_att - B_avg_BODY_att,
+        avg_BODY_landed_dif = R_avg_BODY_landed - B_avg_BODY_landed,
+        avg_opp_BODY_att_dif = R_avg_opp_BODY_att - B_avg_opp_BODY_att,
+        avg_opp_BODY_landed_dif = R_avg_opp_BODY_landed - B_avg_opp_BODY_landed,
+        avg_LEG_att_dif = R_avg_LEG_att - B_avg_LEG_att,
+        avg_LEG_landed_dif = R_avg_LEG_landed - B_avg_LEG_landed,
+        avg_opp_LEG_att_dif = R_avg_opp_LEG_att - B_avg_opp_LEG_att,
+        avg_opp_TD_att_dif = R_avg_opp_TD_att - B_avg_opp_TD_att,
+        avg_opp_LEG_landed_dif = R_avg_opp_LEG_landed - B_avg_opp_LEG_landed,
+        avg_DISTANCE_att_dif = R_avg_DISTANCE_att - B_avg_DISTANCE_att,
+        avg_DISTANCE_landed_dif = R_avg_DISTANCE_landed - B_avg_DISTANCE_landed,
+        avg_opp_DISTANCE_att_dif = R_avg_opp_DISTANCE_att - B_avg_opp_DISTANCE_att,
+        avg_opp_DISTANCE_landed_dif = R_avg_opp_DISTANCE_landed - B_avg_opp_DISTANCE_landed,
+        avg_CLINCH_att_dif = R_avg_CLINCH_att - B_avg_CLINCH_att,
+        avg_CLINCH_landed_dif = R_avg_CLINCH_landed - B_avg_CLINCH_landed,
+        avg_opp_CLINCH_att_dif = R_avg_opp_CLINCH_att - B_avg_opp_CLINCH_att,
+        avg_opp_CLINCH_landed_dif = R_avg_opp_CLINCH_landed - B_avg_opp_CLINCH_landed,
+        avg_GROUND_att_dif = R_avg_GROUND_att - B_avg_GROUND_att,
+        avg_GROUND_landed_dif = R_avg_GROUND_landed - B_avg_GROUND_landed,
+        avg_opp_GROUND_att_dif = R_avg_opp_GROUND_att - B_avg_opp_GROUND_att,
+         avg_opp_GROUND_landed_dif = R_avg_opp_GROUND_landed - B_avg_opp_GROUND_landed,
+         avg_CTRL_time.seconds._dif = R_avg_CTRL_time.seconds. - B_avg_CTRL_time.seconds. ,
+         avg_opp_CTRL_time.seconds._dif = R_avg_opp_CTRL_time.seconds. - B_avg_opp_CTRL_time.seconds. ,
+         total_time_fought.seconds._dif = R_total_time_fought.seconds. - B_total_time_fought.seconds. ,
+         total_rounds_fought_dif = R_total_rounds_fought - B_total_rounds_fought,
+         total_title_bouts_dif = R_total_title_bouts - B_total_title_bouts,
+         current_lose_streak_dif = R_current_lose_streak - B_current_lose_streak,
+         current_win_streak_dif = R_current_win_streak - B_current_win_streak,
+         losses_dif = R_losses - B_losses,
+         draw_dif = R_draw - B_draw,
+         win_by_Decision_Majority_dif = R_win_by_Decision_Majority - B_win_by_Decision_Majority,
+         win_by_Decision_Split_dif = R_win_by_Decision_Split - B_win_by_Decision_Split,
+         win_by_Decision_Unanimous_dif =  R_win_by_Decision_Unanimous - B_win_by_Decision_Unanimous,
+         win_by_KO.TKO_dif = R_win_by_KO.TKO - B_win_by_KO.TKO,
+         win_by_Submission_dif = R_win_by_Submission - B_win_by_Submission,
+         win_by_TKO_Doctor_Stoppage_dif = R_win_by_TKO_Doctor_Stoppage - B_win_by_TKO_Doctor_Stoppage,
+        R_stance = ifelse(R_Stance_Open.Stance == 1, "Open",
+                           ifelse(R_Stance_Orthodox == 1, "Orthodox",
+                                  ifelse(R_Stance_Sideways == 1, "Sideways",
+                                         ifelse(R_Stance_Southpaw == 1, "Southpaw",
+                                                ifelse(R_Stance_Switch == 1, "Switch", "None"))))),
+        B_stance = ifelse(B_Stance_Open.Stance == 1, "Open",
+                           ifelse(B_Stance_Orthodox == 1, "Orthodox",
+                                  ifelse(B_Stance_Sideways == 1, "Sideways",
+                                         ifelse(B_Stance_Southpaw == 1, "Southpaw",
+                                                ifelse(B_Stance_Switch == 1, "Switch", "None"))))),
+        weightclass = ifelse(weight_class_Bantamweight == 1, "Bantam",
+                              ifelse(weight_class_CatchWeight == 1, "Catch",
+                                     ifelse(weight_class_Featherweight == 1, "Feather",
+                                            ifelse(weight_class_Flyweight == 1, "Fly",
+                                                   ifelse(weight_class_Heavyweight == 1, "Heavy",
+                                                          ifelse(weight_class_LightHeavyweight == 1, "Light Heavy",
+                                                                 ifelse(weight_class_Lightweight == 1, "Light",
+                                                                        ifelse(weight_class_Middleweight == 1, "Middle",
+                                                                               ifelse(weight_class_OpenWeight == 1, "Open",
+                                                                                      ifelse(weight_class_Welterweight == 1, "Welter",
+                                                                                             ifelse(weight_class_WomenBantamweight == 1, "Women Bantam",
+                                                                                                    ifelse(weight_class_WomenFeatherweight == 1, "Women Featherweight",
+                                                                                                           ifelse(weight_class_WomenFlyweight == 1, "Women Flyweight",
+                                                                                                                  ifelse(weight_class_WomenStrawweight == 1, "Women Strawweight", "None"))))))))))))))
+        )
+
+UFC.new <- UFC.new %>%
+  select(-c(R_win_percent, B_win_percent))
+
+UFC.new <- UFC.new %>%
+  mutate(R_stance = as.factor(R_stance),
+         B_stance = as.factor(B_stance),
+         weightclass = as.factor(weightclass))
+UFC.new <- UFC.new[161:231]
 ```
 
 ```{r}
-UFC %>%
-  head()
-```
-
-```{r}
-UFC <- UFC %>%
-  mutate(Winner = as.factor(Winner))
+UFC.new %>%
+  head(10)
 ```
 
 ```{r}
@@ -98,6 +188,14 @@ length(ypred[test$win==ypred]) / length(ypred)
 
 ```{r}
 library(randomForest)
+```
+
+```{r}
+set.seed(123)
+smp_size <- floor(0.1 * nrow(UFC))
+train_ind <- sample(seq_len(nrow(UFC)), size = smp_size)
+train <- UFC[train_ind, ]
+test <- UFC[-train_ind, ]
 ```
 
 ```{r}
