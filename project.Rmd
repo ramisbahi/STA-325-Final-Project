@@ -11,6 +11,8 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyr)
 library(e1071)
 library(tidyverse)
+library(randomForest)
+library(tree)
 ```
 
 ```{r}
@@ -174,7 +176,7 @@ length(ypred[test$win==ypred]) / length(ypred)
 
 ```{r}
 set.seed(123)
-smp_size <- floor(0.5 * nrow(UFC.new))
+smp_size <- floor(0.8 * nrow(UFC.new))
 train_ind <- sample(seq_len(nrow(UFC.new)), size = smp_size)
 train <- UFC.new[train_ind, ]
 test <- UFC.new[-train_ind, ]
@@ -182,7 +184,7 @@ test <- UFC.new[-train_ind, ]
 
 ```{r}
 lmfit <- glm(win ~ ., data = train, family="binomial")
-summary(lmfit)
+#summary(lmfit)
 ```
 
 
@@ -192,9 +194,7 @@ ypred <- ifelse(pred > 0.5, 1, 0)
 length(ypred[test$win==ypred]) / length(ypred)
 ```
 
-```{r}
-library(randomForest)
-```
+
 
 ```{r}
 set.seed(123)
@@ -216,6 +216,11 @@ imp[order(imp[,"MeanDecreaseAccuracy"], decreasing=TRUE),]
 ```
 
 ```{r}
+vars <- row.names(imp[order(imp[,"MeanDecreaseAccuracy"], decreasing=TRUE),])
+vars[1:10]
+```
+
+```{r}
 #imp[order(imp[,"MeanDecreaseGini"], decreasing=TRUE),]
 ```
 
@@ -223,7 +228,7 @@ Back to linear regression (with top 10 variables from RF importance as our only 
 
 ```{r}
 set.seed(123)
-smp_size <- floor(0.7 * nrow(UFC.new))
+smp_size <- floor(0.8 * nrow(UFC.new))
 train_ind <- sample(seq_len(nrow(UFC.new)), size = smp_size)
 train <- UFC.new[train_ind, ]
 test <- UFC.new[-train_ind, ]
@@ -243,7 +248,7 @@ avg_TD_pct_dif
 
 ```{r}
 lmfit <- glm(win ~ avg_opp_SIG_STR_landed_dif + avg_opp_DISTANCE_att_dif + avg_opp_GROUND_landed_dif + avg_opp_LEG_landed_dif + winperc_dif + avg_TOTAL_STR_att_dif + avg_HEAD_landed_dif + avg_opp_HEAD_att_dif + avg_DISTANCE_landed_dif + avg_TD_pct_dif, data = train, family="binomial")
-summary(lmfit)
+#summary(lmfit)
 ```
 
 ```{r}
@@ -251,3 +256,135 @@ pred <- predict(lmfit, test, type = "response")
 ypred <- ifelse(pred > 0.5, 1, 0)
 length(ypred[test$win==ypred]) / length(ypred)
 ```
+
+## Cross Validation for Top x (1 <= x <= 20) Predictor Variables
+
+### Logistic Regression
+
+```{r}
+set.seed(123)
+smp_size <- floor(0.8 * nrow(UFC.new))
+train_ind <- sample(seq_len(nrow(UFC.new)), size = smp_size)
+train <- UFC.new[train_ind, ]
+test <- UFC.new[-train_ind, ]
+```
+
+```{r}
+logistic_cross_val <- function(vars, min_preds, max_preds)
+{
+  for(i in min_preds:max_preds)
+  {
+    predictors <- paste(vars[1:i], collapse=" + ")
+    lmfit <- glm(as.formula(paste("win", predictors, sep=" ~ ")), data = train, family="binomial")
+    pred <- predict(lmfit, test, type = "response")
+    ypred <- ifelse(pred > 0.5, 1, 0)
+    accuracy <- length(ypred[test$win==ypred]) / length(ypred)
+    print(sprintf("predictors: %s", predictors))
+    print(sprintf("Test prediction accuracy: %f", accuracy))
+    print(" ")
+  }
+}
+```
+
+```{r}
+logistic_cross_val(vars, 1, 20)
+```
+
+### SVMs
+
+```{r}
+set.seed(123)
+smp_size <- floor(0.2 * nrow(UFC.new))
+train_ind <- sample(seq_len(nrow(UFC.new)), size = smp_size)
+train <- UFC.new[train_ind, ]
+test <- UFC.new[-train_ind, ]
+```
+
+```{r}
+svmfit <- svm(win ~ ., data = train, kernel = "linear",
+              cost = 10, scale=TRUE)
+```
+
+```{r}
+ypred <- predict(svmfit, test)
+length(ypred[test$win==ypred]) / length(ypred)
+```
+
+```{r}
+svm_cross_val <- function(vars, min_preds, max_preds)
+{
+  for(i in min_preds:max_preds)
+  {
+    predictors <- paste(vars[1:i], collapse=" + ")
+    svmfit <- svm(as.formula(paste("win", predictors, sep=" ~ ")), data = train, kernel = "linear",
+                  cost = 10, scale=TRUE)
+    ypred <- predict(svmfit, test)
+    accuracy <- length(ypred[test$win==ypred]) / length(ypred)
+    print(sprintf("predictors: %s", predictors))
+    print(sprintf("Test prediction accuracy: %f", accuracy))
+    print(" ")
+  }
+}
+```
+
+```{r}
+#svm_cross_val(vars, 1, 40)
+```
+
+```{r}
+svm_radial_cross_val <- function(vars, min_preds, max_preds)
+{
+  for(i in min_preds:max_preds)
+  {
+    predictors <- paste(vars[1:i], collapse=" + ")
+    svmfit <- svm(as.formula(paste("win", predictors, sep=" ~ ")), data = train, kernel = "radial", gamma=1,
+                  cost = 10, scale=TRUE)
+    ypred <- predict(svmfit, test)
+    accuracy <- length(ypred[test$win==ypred]) / length(ypred)
+    print(sprintf("predictors: %s", predictors))
+    print(sprintf("Test prediction accuracy: %f", accuracy))
+    print(" ")
+  }
+}
+```
+
+```{r}
+svm_radial_cross_val(vars, 1, 40)
+```
+
+## Trees
+
+```{r}
+predictors <- paste(vars[1:1], collapse=" + ")
+treefit <- tree(as.formula(paste("win", predictors, sep=" ~ ")), data = train)
+pred <- predict(treefit, test)[,2]
+ypred <- ifelse(pred > 0.5, 1, 0)
+accuracy <- length(ypred[test$win==ypred]) / length(ypred)
+print(sprintf("predictors: %s", predictors))
+print(sprintf("Test prediction accuracy: %f", accuracy))
+print(" ")
+    
+#tree(High ~. -Sales, Carseats)
+```
+
+```{r}
+tree_cross_val <- function(vars, min_preds, max_preds)
+{
+  for(i in min_preds:max_preds)
+  {
+    predictors <- paste(vars[1:i], collapse=" + ")
+    treefit <- tree(as.formula(paste("win", predictors, sep=" ~ ")), data = train)
+    pred <- predict(treefit, test)[,2]
+    ypred <- ifelse(pred > 0.5, 1, 0)
+    accuracy <- length(ypred[test$win==ypred]) / length(ypred)
+    print(sprintf("predictors: %s", predictors))
+    print(sprintf("Test prediction accuracy: %f", accuracy))
+    print(" ")
+  }
+}
+```
+
+```{r}
+tree_cross_val(vars, 1, 40)
+```
+
