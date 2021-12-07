@@ -140,6 +140,54 @@ UFC.new %>%
 ```
 
 ```{r}
+ggplot(data = UFC.new, aes(x = win, y = age_dif, fill = win)) + 
+  geom_boxplot(alpha=0.6, outlier.shape = NA) + 
+  scale_y_continuous(limits = c(-15, 16)) + 
+  labs(x = "Did Red Win?(1 corresponds to yes, 0 corresponds to no)",
+       y = "Age Differential(Red - Blue)",
+       title = "Red Winning Skewed Towards Lower Ages") +
+  scale_fill_manual(values=c("blue", "red")) + 
+  stat_summary(fun = mean, geom="point", shape = 20, size = 5, color="white", fill="white") +
+  theme(plot.title = element_text(hjust = 0.5), legend.position = "none")
+```
+
+```{r}
+plot2 <- UFC.new %>% 
+  group_by(R_stance) %>% 
+  count(win == 1) %>% 
+  mutate(totalperstance = sum(n)) %>% 
+  mutate(percentwinbystance = n/totalperstance)
+
+names(plot2)<-str_replace_all(names(plot2), c(" " = ".", "=" = ""))
+
+plot2sel <- plot2 %>% 
+  filter(win..1 == TRUE) %>% 
+  dplyr::select(R_stance, percentwinbystance)
+
+ggplot(data = plot2sel, aes(x = R_stance, y = percentwinbystance, fill = R_stance)) + 
+  geom_col(alpha=0.6) + 
+  labs(x = "Fighter R's Stance",
+       y = "Percentage of Fights Where R Won",
+       title = "Small Difference in Win Percentage for Each Stance",
+       subtitle = "Small Sample Sizes for Open and Sideways Variables") +
+  theme(plot.title = element_text(hjust = 0.5)) + 
+  theme(plot.subtitle = element_text(hjust = 0.5), legend.position = "none")
+```
+
+```{r}
+ggplot(data = UFC.new, aes(x = win, y = avg_TOTAL_STR_att_dif, fill = win)) + 
+  geom_boxplot(alpha=0.6, outlier.shape = NA) + 
+  scale_y_continuous(limits = c(-50, 50)) + 
+  labs(x = "Did Red Win?(1 corresponds to yes, 0 corresponds to no)",
+       y = "Difference in Number of Average Total Strikes Attempted",
+       title = "Red Wins a Little More Often When ") +
+  stat_summary(fun = mean, geom="point", shape = 20, size = 5, color="white", fill="white") +
+  scale_fill_manual(values=c("blue", "red")) + 
+  theme(plot.title = element_text(hjust = 0.5), legend.position = "none",
+        plot.subtitle = element_text(hjust = 0.5))
+```
+
+```{r}
 set.seed(123)
 smp_size <- floor(0.01 * nrow(UFC.new))
 train_ind <- sample(seq_len(nrow(UFC.new)), size = smp_size)
