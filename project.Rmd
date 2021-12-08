@@ -400,6 +400,27 @@ svm_radial_cross_val <- function(vars, min_preds, max_preds)
 svm_radial_cross_val(vars, 1, 40)
 ```
 
+```{r}
+svm_poly_cross_val <- function(vars, min_preds, max_preds)
+{
+  for(i in min_preds:max_preds)
+  {
+    predictors <- paste(vars[1:i], collapse=" + ")
+    svmfit <- svm(as.formula(paste("win", predictors, sep=" ~ ")), data = train, kernel = "polynomial", degree = 3, gamma=1, coef0 = 0,
+                  cost = 10, scale=TRUE)
+    ypred <- predict(svmfit, test)
+    accuracy <- length(ypred[test$win==ypred]) / length(ypred)
+    print(sprintf("predictors: %s", predictors))
+    print(sprintf("Test prediction accuracy: %f", accuracy))
+    print(" ")
+  }
+}
+```
+
+```{r}
+svm_poly_cross_val(vars, 1, 40)
+```
+
 ## Trees
 
 ```{r}
