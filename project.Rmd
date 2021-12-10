@@ -482,9 +482,30 @@ tree_cross_val(vars, 1, 40)
 # Final Model
 
 ```{r}
+set.seed(123)
+smp_size <- floor(0.7 * nrow(UFC.new))
+train_ind <- sample(seq_len(nrow(UFC.new)), size = smp_size)
+train <- UFC.new[train_ind, ]
+test <- UFC.new[-train_ind, ]
+```
+
+```{r}
 lmfit <- glm(win ~ age_dif + reach_dif + avg_opp_CTRL_time.seconds._dif + weightclass + avg_TD_att_dif + height_dif + avg_SIG_STR_pct_dif + weightclass + total_time_fought.seconds._dif + avg_TOTAL_STR_att_dif + avg_DISTANCE_att_dif + avg_TOTAL_STR_landed_dif + avg_CTRL_time.seconds._dif + avg_opp_BODY_landed_dif + win_by_Decision_Split_dif + avg_opp_BODY_att_dif + avg_DISTANCE_landed_dif + weightclass + avg_SIG_STR_landed_dif + avg_BODY_landed_dif + weightclass + avg_HEAD_landed_dif + avg_LEG_landed_dif + avg_SIG_STR_att_dif + avg_BODY_att_dif + avg_SUB_ATT_dif + avg_HEAD_att_dif + avg_LEG_att_dif + avg_opp_TD_pct_dif + avg_opp_CLINCH_att_dif + avg_opp_KD_dif + weightclass + winperc_dif + avg_opp_SIG_STR_pct_dif + avg_opp_TD_landed_dif + longest_win_streak_dif, data = train, family="binomial")
 ```
 
 ```{r}
 summary(lmfit)
+```
+
+```{r}
+pred <- predict(lmfit, test, type = "response")
+    ypred <- ifelse(pred > 0.5, 1, 0)
+    accuracy <- length(ypred[test$win==ypred]) / length(ypred)
+    print(sprintf("predictors: %s", predictors))
+    print(sprintf("Test prediction accuracy: %f", accuracy))
+    print(" ")
+```
+
+```{r}
+
 ```
