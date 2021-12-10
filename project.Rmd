@@ -323,7 +323,7 @@ vars
 
 ```{r}
 set.seed(123)
-smp_size <- floor(0.8 * nrow(UFC.new))
+smp_size <- floor(0.7 * nrow(UFC.new))
 train_ind <- sample(seq_len(nrow(UFC.new)), size = smp_size)
 train <- UFC.new[train_ind, ]
 test <- UFC.new[-train_ind, ]
@@ -347,7 +347,7 @@ logistic_cross_val <- function(vars, min_preds, max_preds)
 ```
 
 ```{r}
-logistic_cross_val(vars, 1, 20)
+logistic_cross_val(vars, 1, 47)
 ```
 
 ```{r}
@@ -477,4 +477,14 @@ tree_cross_val <- function(vars, min_preds, max_preds)
 
 ```{r}
 tree_cross_val(vars, 1, 40)
+```
+
+# Final Model
+
+```{r}
+lmfit <- glm(win ~ age_dif + reach_dif + avg_opp_CTRL_time.seconds._dif + weightclass + avg_TD_att_dif + height_dif + avg_SIG_STR_pct_dif + weightclass + total_time_fought.seconds._dif + avg_TOTAL_STR_att_dif + avg_DISTANCE_att_dif + avg_TOTAL_STR_landed_dif + avg_CTRL_time.seconds._dif + avg_opp_BODY_landed_dif + win_by_Decision_Split_dif + avg_opp_BODY_att_dif + avg_DISTANCE_landed_dif + weightclass + avg_SIG_STR_landed_dif + avg_BODY_landed_dif + weightclass + avg_HEAD_landed_dif + avg_LEG_landed_dif + avg_SIG_STR_att_dif + avg_BODY_att_dif + avg_SUB_ATT_dif + avg_HEAD_att_dif + avg_LEG_att_dif + avg_opp_TD_pct_dif + avg_opp_CLINCH_att_dif + avg_opp_KD_dif + weightclass + winperc_dif + avg_opp_SIG_STR_pct_dif + avg_opp_TD_landed_dif + longest_win_streak_dif, data = train, family="binomial")
+```
+
+```{r}
+summary(lmfit)
 ```
