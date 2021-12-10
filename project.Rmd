@@ -443,8 +443,6 @@ svm_poly_cross_val(vars, 1, 40)
 ```
 
 
-
-
 ## Trees
 
 ```{r}
