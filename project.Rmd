@@ -119,19 +119,14 @@ UFC.new <- UFC %>%
                                                                                                            ifelse(weight_class_WomenFlyweight == 1, "Women Flyweight",
                                                                                                                   ifelse(weight_class_WomenStrawweight == 1, "Women Strawweight", "None"))))))))))))))
         )
-
-
 UFC.new <- UFC.new %>%
   dplyr::select(-c(R_win_percent, B_win_percent, losses_dif, draw_dif))
-
 UFC.new <- UFC.new %>%
   mutate(R_stance = as.factor(R_stance),
          B_stance = as.factor(B_stance),
          weightclass = as.factor(weightclass))
 UFC.new <- UFC.new[161:229]
-```
 
-```{r}
 UFC.new <- UFC.new %>%
   mutate(win = as.factor(win))
 ```
@@ -159,13 +154,10 @@ plot2 <- UFC.new %>%
   count(win == 1) %>% 
   mutate(totalperstance = sum(n)) %>% 
   mutate(percentwinbystance = n/totalperstance)
-
 names(plot2)<-str_replace_all(names(plot2), c(" " = ".", "=" = ""))
-
 plot2sel <- plot2 %>% 
   filter(win..1 == TRUE) %>% 
   dplyr::select(R_stance, percentwinbystance)
-
 ggplot(data = plot2sel, aes(x = R_stance, y = percentwinbystance, fill = R_stance)) + 
   geom_col(alpha=0.6) + 
   labs(x = "Fighter R's Stance",
@@ -310,6 +302,26 @@ length(ypred[test$win==ypred]) / length(ypred)
 ### Logistic Regression
 
 ```{r}
+library(broom)
+library(sjmisc)
+```
+
+```{r}
+lmfit <- glm(win ~ ., data = train, family="binomial")
+coefs <- tidy(lmfit)
+vars <- coefs[order(coefs$p.value),]$term
+l <- length(vars)
+for (i in 1:l) {
+  cont <- str_contains(vars[i],"weightclass")
+  if (cont) {
+    vars[i] = "weightclass"
+  }
+}
+vars
+```
+
+
+```{r}
 set.seed(123)
 smp_size <- floor(0.8 * nrow(UFC.new))
 train_ind <- sample(seq_len(nrow(UFC.new)), size = smp_size)
@@ -338,6 +350,10 @@ logistic_cross_val <- function(vars, min_preds, max_preds)
 logistic_cross_val(vars, 1, 20)
 ```
 
+```{r}
+length(test$win[test$win==1]) / length(test$win)
+```
+
 ### SVMs
 
 ```{r}
@@ -346,6 +362,10 @@ smp_size <- floor(0.2 * nrow(UFC.new))
 train_ind <- sample(seq_len(nrow(UFC.new)), size = smp_size)
 train <- UFC.new[train_ind, ]
 test <- UFC.new[-train_ind, ]
+```
+
+```{r}
+length(test$win[test$win==1]) / length(test$win)
 ```
 
 ```{r}
@@ -376,8 +396,9 @@ svm_cross_val <- function(vars, min_preds, max_preds)
 ```
 
 ```{r}
-#svm_cross_val(vars, 1, 40)
+svm_cross_val(vars, 1, 40)
 ```
+
 
 ```{r}
 svm_radial_cross_val <- function(vars, min_preds, max_preds)
@@ -399,6 +420,30 @@ svm_radial_cross_val <- function(vars, min_preds, max_preds)
 ```{r}
 svm_radial_cross_val(vars, 1, 40)
 ```
+
+```{r}
+svm_poly_cross_val <- function(vars, min_preds, max_preds)
+{
+  for(i in min_preds:max_preds)
+  {
+    predictors <- paste(vars[1:i], collapse=" + ")
+    svmfit <- svm(as.formula(paste("win", predictors, sep=" ~ ")), data = train, kernel = "polynomial", degree = 3, gamma=1, coef0 = 0,
+                  cost = 10, scale=TRUE)
+    ypred <- predict(svmfit, test)
+    accuracy <- length(ypred[test$win==ypred]) / length(ypred)
+    print(sprintf("predictors: %s", predictors))
+    print(sprintf("Test prediction accuracy: %f", accuracy))
+    print(" ")
+  }
+}
+```
+
+```{r}
+svm_poly_cross_val(vars, 1, 40)
+```
+
+
+
 
 ## Trees
 
@@ -435,4 +480,3 @@ tree_cross_val <- function(vars, min_preds, max_preds)
 ```{r}
 tree_cross_val(vars, 1, 40)
 ```
-
