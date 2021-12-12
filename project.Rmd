@@ -338,6 +338,9 @@ lmfit <- glm(win ~ age_dif + reach_dif + avg_opp_CTRL_time.seconds._dif + weight
 
 ```{r}
 summary(lmfit)
+
+tidy(lmfit) %>%
+  knitr::kable(digits = 3)
 ```
 
 
