@@ -501,11 +501,26 @@ summary(lmfit)
 pred <- predict(lmfit, test, type = "response")
     ypred <- ifelse(pred > 0.5, 1, 0)
     accuracy <- length(ypred[test$win==ypred]) / length(ypred)
-    print(sprintf("predictors: %s", predictors))
+    #print(sprintf("predictors: %s", predictors))
     print(sprintf("Test prediction accuracy: %f", accuracy))
     print(" ")
 ```
 
 ```{r}
 
+lmfit2 <- glm(win ~ age_dif + reach_dif + avg_opp_CTRL_time.seconds._dif + weightclass + avg_TD_att_dif + win_by_Decision_Split_dif , data = train, family="binomial")
+
+```
+
+```{r}
+summary(lmfit2)
+```
+
+```{r}
+pred <- predict(lmfit2, test, type = "response")
+    ypred <- ifelse(pred > 0.5, 1, 0)
+    accuracy <- length(ypred[test$win==ypred]) / length(ypred)
+    #print(sprintf("predictors: %s", predictors))
+    print(sprintf("Test prediction accuracy: %f", accuracy))
+    print(" ")
 ```
