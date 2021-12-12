@@ -379,16 +379,6 @@ pred <- predict(lmfit, test, type = "response")
     print(" ")
 ```
 
-
-```{r}
-pred <- predict(lmfit2, test, type = "response")
-    ypred <- ifelse(pred > 0.5, 1, 0)
-    accuracy <- length(ypred[test$win==ypred]) / length(ypred)
-    #print(sprintf("predictors: %s", predictors))
-    print(sprintf("Test prediction accuracy: %f", accuracy))
-    print(" ")
-```
-
 # ROC Curve
 
 ```{r}
