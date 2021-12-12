@@ -181,129 +181,21 @@ ggplot(data = UFC.new, aes(x = win, y = avg_TOTAL_STR_att_dif, fill = win)) +
         plot.subtitle = element_text(hjust = 0.5))
 ```
 
-```{r}
-set.seed(123)
-smp_size <- floor(0.01 * nrow(UFC.new))
-train_ind <- sample(seq_len(nrow(UFC.new)), size = smp_size)
-train <- UFC.new[train_ind, ]
-test <- UFC.new[-train_ind, ]
-```
+# Cross Validation for Top x (1 <= x <= 40) Predictor Variables
 
-```{r}
-train
-```
-
-```{r}
-svmfit <- svm(win ~ ., data = train, kernel = "linear",
-              cost = 1, scale=FALSE)
-```
-
-```{r}
-ypred <- predict(svmfit, test)
-length(ypred[test$win==ypred]) / length(ypred)
-```
-
-```{r}
-svmfit <- svm(win ~ ., data = train, kernel = "radial",
-              gamma = 1, cost = 1, scale=FALSE)
-```
-
-```{r}
-ypred <- predict(svmfit, test)
-length(ypred[test$win==ypred]) / length(ypred)
-```
-
-
-```{r}
-set.seed(123)
-smp_size <- floor(0.8 * nrow(UFC.new))
-train_ind <- sample(seq_len(nrow(UFC.new)), size = smp_size)
-train <- UFC.new[train_ind, ]
-test <- UFC.new[-train_ind, ]
-```
-
-```{r}
-lmfit <- glm(win ~ ., data = train, family="binomial")
-#summary(lmfit)
-```
-
-
-```{r}
-pred <- predict(lmfit, test, type = "response")
-ypred <- ifelse(pred > 0.5, 1, 0)
-length(ypred[test$win==ypred]) / length(ypred)
-```
-
-
-
-```{r}
-set.seed(123)
-smp_size <- floor(0.1 * nrow(UFC.new))
-train_ind <- sample(seq_len(nrow(UFC.new)), size = smp_size)
-train <- UFC.new[train_ind, ]
-test <- UFC.new[-train_ind, ]
-```
-
-```{r}
-rf.UFC <- randomForest(win~., data = train, 
-                          mtry = 6, importance = TRUE)
-```
-
-```{r}
-imp <- importance(rf.UFC)
-#imp
-imp[order(imp[,"MeanDecreaseAccuracy"], decreasing=TRUE),]
-```
-
-```{r}
-vars <- row.names(imp[order(imp[,"MeanDecreaseAccuracy"], decreasing=TRUE),])
-vars[1:10]
-```
-
-```{r}
-#imp[order(imp[,"MeanDecreaseGini"], decreasing=TRUE),]
-```
-
-Back to linear regression (with top 10 variables from RF importance as our only predictors)...
-
-```{r}
-set.seed(123)
-smp_size <- floor(0.8 * nrow(UFC.new))
-train_ind <- sample(seq_len(nrow(UFC.new)), size = smp_size)
-train <- UFC.new[train_ind, ]
-test <- UFC.new[-train_ind, ]
-```
-
-avg_opp_SIG_STR_landed_dif     -0.83527219  4.67609552           4.62119152        3.5854830
-avg_opp_DISTANCE_att_dif       -3.23686801  5.82802622           4.57043866        3.6564104
-avg_opp_GROUND_landed_dif      -1.77018032  5.80859004           4.57027841        4.9531791
-avg_opp_LEG_landed_dif         -2.98326158  5.48150179           4.32517419        4.0299477
-winperc_dif                     1.47369324  4.04125065           4.22766229        4.2451224
-avg_TOTAL_STR_att_dif           0.39604036  3.77409284           4.03862101        4.7240696
-avg_HEAD_landed_dif             0.88275577  3.48660467           3.97494239        4.9114632
-avg_opp_HEAD_att_dif           -3.69152181  5.62056703           3.88778532        3.3877236
-avg_DISTANCE_landed_dif        -0.19862821  3.49156305           3.67812377        3.6752626
-avg_TD_pct_dif  
-
-
-```{r}
-lmfit <- glm(win ~ avg_opp_SIG_STR_landed_dif + avg_opp_DISTANCE_att_dif + avg_opp_GROUND_landed_dif + avg_opp_LEG_landed_dif + winperc_dif + avg_TOTAL_STR_att_dif + avg_HEAD_landed_dif + avg_opp_HEAD_att_dif + avg_DISTANCE_landed_dif + avg_TD_pct_dif, data = train, family="binomial")
-#summary(lmfit)
-```
-
-```{r}
-pred <- predict(lmfit, test, type = "response")
-ypred <- ifelse(pred > 0.5, 1, 0)
-length(ypred[test$win==ypred]) / length(ypred)
-```
-
-## Cross Validation for Top x (1 <= x <= 20) Predictor Variables
-
-### Logistic Regression
+## Logistic Regression
 
 ```{r}
 library(broom)
 library(sjmisc)
+```
+
+```{r}
+set.seed(123)
+smp_size <- floor(0.8 * nrow(UFC.new))
+train_ind <- sample(seq_len(nrow(UFC.new)), size = smp_size)
+train <- UFC.new[train_ind, ]
+test <- UFC.new[-train_ind, ]
 ```
 
 ```{r}
@@ -313,21 +205,23 @@ vars <- coefs[order(coefs$p.value),]$term
 l <- length(vars)
 for (i in 1:l) {
   cont <- str_contains(vars[i],"weightclass")
+  cont2 <- str_contains(vars[i], "R_stance")
+  cont3 <- str_contains(vars[i], "B_stance")
   if (cont) {
     vars[i] = "weightclass"
   }
+  if (cont2) {
+    vars[i] = "R_stance"
+  }
+  
+  if (cont3) {
+    vars[i] = "B_stance"
+  }
+  
 }
 vars
 ```
 
-
-```{r}
-set.seed(123)
-smp_size <- floor(0.7 * nrow(UFC.new))
-train_ind <- sample(seq_len(nrow(UFC.new)), size = smp_size)
-train <- UFC.new[train_ind, ]
-test <- UFC.new[-train_ind, ]
-```
 
 ```{r}
 logistic_cross_val <- function(vars, min_preds, max_preds)
@@ -354,28 +248,26 @@ logistic_cross_val(vars, 1, 47)
 length(test$win[test$win==1]) / length(test$win)
 ```
 
-### SVMs
+## SVMs
+
+
+```{r}
+UFC.num <- UFC.new %>%
+  select(-c(B_stance, R_stance, weightclass, win))
+```
+
 
 ```{r}
 set.seed(123)
-smp_size <- floor(0.2 * nrow(UFC.new))
-train_ind <- sample(seq_len(nrow(UFC.new)), size = smp_size)
-train <- UFC.new[train_ind, ]
-test <- UFC.new[-train_ind, ]
+smp_size <- floor(0.8 * nrow(UFC.num))
+train_ind <- sample(seq_len(nrow(UFC.num)), size = smp_size)
+train_num <- UFC.num[train_ind, ]
+test_num <- UFC.num[-train_ind, ]
 ```
 
 ```{r}
+print("proportion of red wins (naive red predict test accuracy)")
 length(test$win[test$win==1]) / length(test$win)
-```
-
-```{r}
-svmfit <- svm(win ~ ., data = train, kernel = "linear",
-              cost = 10, scale=TRUE)
-```
-
-```{r}
-ypred <- predict(svmfit, test)
-length(ypred[test$win==ypred]) / length(ypred)
 ```
 
 ```{r}
@@ -383,12 +275,19 @@ svm_cross_val <- function(vars, min_preds, max_preds)
 {
   for(i in min_preds:max_preds)
   {
-    predictors <- paste(vars[1:i], collapse=" + ")
-    svmfit <- svm(as.formula(paste("win", predictors, sep=" ~ ")), data = train, kernel = "linear",
+    pca_train <- prcomp(train_num, center = TRUE, scale. = TRUE, )
+    
+    train_components <- as.data.frame(cbind(win = as.numeric(train$win) - 1, pca_train$x[, 1:i]))
+    
+    svmfit <- svm(win ~ ., data = train_components, family = "binomial", kernel = "linear",
                   cost = 10, scale=TRUE)
-    ypred <- predict(svmfit, test)
+    
+    pca_test <- prcomp(test_num, center = TRUE, scale. = TRUE)
+    test_components <- as.data.frame(cbind(win = as.numeric(test$win) - 1, pca_test$x[, 1:i]))
+    pred <- predict(svmfit, test_components, type = "response")
+    ypred <- ifelse(pred > 0.5, 1, 0)
     accuracy <- length(ypred[test$win==ypred]) / length(ypred)
-    print(sprintf("predictors: %s", predictors))
+    print(sprintf("Num predictors: %d", i))
     print(sprintf("Test prediction accuracy: %f", accuracy))
     print(" ")
   }
@@ -396,118 +295,96 @@ svm_cross_val <- function(vars, min_preds, max_preds)
 ```
 
 ```{r}
-svm_cross_val(vars, 1, 40)
+svm_cross_val(vars, 2, 26)
 ```
 
-
-```{r}
-svm_radial_cross_val <- function(vars, min_preds, max_preds)
-{
-  for(i in min_preds:max_preds)
-  {
-    predictors <- paste(vars[1:i], collapse=" + ")
-    svmfit <- svm(as.formula(paste("win", predictors, sep=" ~ ")), data = train, kernel = "radial", gamma=1,
-                  cost = 10, scale=TRUE)
-    ypred <- predict(svmfit, test)
-    accuracy <- length(ypred[test$win==ypred]) / length(ypred)
-    print(sprintf("predictors: %s", predictors))
-    print(sprintf("Test prediction accuracy: %f", accuracy))
-    print(" ")
-  }
-}
-```
-
-```{r}
-svm_radial_cross_val(vars, 1, 40)
-```
-
-```{r}
-svm_poly_cross_val <- function(vars, min_preds, max_preds)
-{
-  for(i in min_preds:max_preds)
-  {
-    predictors <- paste(vars[1:i], collapse=" + ")
-    svmfit <- svm(as.formula(paste("win", predictors, sep=" ~ ")), data = train, kernel = "polynomial", degree = 3, gamma=1, coef0 = 0,
-                  cost = 10, scale=TRUE)
-    ypred <- predict(svmfit, test)
-    accuracy <- length(ypred[test$win==ypred]) / length(ypred)
-    print(sprintf("predictors: %s", predictors))
-    print(sprintf("Test prediction accuracy: %f", accuracy))
-    print(" ")
-  }
-}
-```
-
-```{r}
-svm_poly_cross_val(vars, 1, 40)
-```
 
 
 ## Trees
 
+
 ```{r}
-predictors <- paste(vars[1:1], collapse=" + ")
-treefit <- tree(as.formula(paste("win", predictors, sep=" ~ ")), data = train)
-pred <- predict(treefit, test)[,2]
-ypred <- ifelse(pred > 0.5, 1, 0)
-accuracy <- length(ypred[test$win==ypred]) / length(ypred)
-print(sprintf("predictors: %s", predictors))
-print(sprintf("Test prediction accuracy: %f", accuracy))
-print(" ")
-    
-#tree(High ~. -Sales, Carseats)
+tree.UFC <- tree(as.factor(win) ~ ., data = train)
+tree.pred <- predict(tree.UFC, newdata = test, type = "class")
+table(tree.pred, test$win)
+sum(diag(table(tree.pred, test$win)))/(1182+589)
 ```
 
 ```{r}
-tree_cross_val <- function(vars, min_preds, max_preds)
-{
-  for(i in min_preds:max_preds)
-  {
-    predictors <- paste(vars[1:i], collapse=" + ")
-    treefit <- tree(as.formula(paste("win", predictors, sep=" ~ ")), data = train)
-    pred <- predict(treefit, test)[,2]
-    ypred <- ifelse(pred > 0.5, 1, 0)
-    accuracy <- length(ypred[test$win==ypred]) / length(ypred)
-    print(sprintf("predictors: %s", predictors))
-    print(sprintf("Test prediction accuracy: %f", accuracy))
-    print(" ")
-  }
-}
+set.seed(3)
+cv.UFC <- cv.tree(tree.UFC, FUN = prune.misclass)
+names(cv.UFC)
+cv.UFC
 ```
 
 ```{r}
-tree_cross_val(vars, 1, 40)
+par(mfrow = c(1,2))
+plot(cv.UFC$size, cv.UFC$dev, type = "b")
+plot(cv.UFC$k, cv.UFC$dev, type = "b")
 ```
+
+```{r}
+prune.UFC <- prune.misclass(tree.UFC, best = 2)
+plot(prune.UFC)
+text(prune.UFC, pretty = 0)
+```
+
 
 # Final Model
 
 ```{r}
-set.seed(123)
-smp_size <- floor(0.7 * nrow(UFC.new))
-train_ind <- sample(seq_len(nrow(UFC.new)), size = smp_size)
-train <- UFC.new[train_ind, ]
-test <- UFC.new[-train_ind, ]
-```
-
-```{r}
-lmfit <- glm(win ~ age_dif + reach_dif + avg_opp_CTRL_time.seconds._dif + weightclass + avg_TD_att_dif + height_dif + avg_SIG_STR_pct_dif + weightclass + total_time_fought.seconds._dif + avg_TOTAL_STR_att_dif + avg_DISTANCE_att_dif + avg_TOTAL_STR_landed_dif + avg_CTRL_time.seconds._dif + avg_opp_BODY_landed_dif + win_by_Decision_Split_dif + avg_opp_BODY_att_dif + avg_DISTANCE_landed_dif + weightclass + avg_SIG_STR_landed_dif + avg_BODY_landed_dif + weightclass + avg_HEAD_landed_dif + avg_LEG_landed_dif + avg_SIG_STR_att_dif + avg_BODY_att_dif + avg_SUB_ATT_dif + avg_HEAD_att_dif + avg_LEG_att_dif + avg_opp_TD_pct_dif + avg_opp_CLINCH_att_dif + avg_opp_KD_dif + weightclass + winperc_dif + avg_opp_SIG_STR_pct_dif + avg_opp_TD_landed_dif + longest_win_streak_dif, data = train, family="binomial")
+lmfit <- glm(win ~ age_dif + reach_dif + avg_opp_CTRL_time.seconds._dif + weightclass + avg_TD_att_dif + height_dif + avg_SIG_STR_pct_dif + weightclass + total_time_fought.seconds._dif + avg_TOTAL_STR_att_dif + avg_DISTANCE_att_dif + avg_TOTAL_STR_landed_dif + avg_CTRL_time.seconds._dif + avg_opp_BODY_landed_dif + win_by_Decision_Split_dif + avg_opp_BODY_att_dif + avg_DISTANCE_landed_dif + weightclass + avg_SIG_STR_landed_dif + avg_BODY_landed_dif + weightclass + avg_HEAD_landed_dif + avg_LEG_landed_dif + avg_SIG_STR_att_dif + avg_BODY_att_dif + avg_SUB_ATT_dif + avg_HEAD_att_dif + avg_LEG_att_dif + avg_opp_TD_pct_dif + avg_opp_CLINCH_att_dif + avg_opp_KD_dif + weightclass + winperc_dif + avg_opp_SIG_STR_pct_dif + avg_opp_TD_landed_dif + longest_win_streak_dif + avg_opp_CLINCH_landed_dif + avg_opp_SIG_STR_att_dif + avg_opp_HEAD_att_dif + avg_opp_HEAD_landed_dif, data = train, family="binomial")
 ```
 
 ```{r}
 summary(lmfit)
 ```
 
+
 ```{r}
+pred <- predict(lmfit, test, type = "response")
+    ypred <- ifelse(pred > 0.5, 1, 0)
+    accuracy <- length(ypred[test$win==ypred]) / length(ypred)
+    print(sprintf("predictors: %s", predictors))
+    print(sprintf("Test prediction accuracy: %f", accuracy))
+    print(" ")
+```
+
+# Model Diagnostics
+
+```{r}
+table(ypred, test$win)
+```
+
+```{r}
+plot(lmfit, which = 4, id.n = 3)
+
+# Extract model results
+lmfit.data <- augment(lmfit) %>% 
+  mutate(index = 1:n())
+
+lmfit.data %>% top_n(3, .cooksd)
+
+ggplot(lmfit.data, aes(index, .std.resid)) + 
+  geom_point(aes(color = win), alpha = .5) +
+  theme_bw()
+```
+
+```{r}
+<<<<<<< HEAD
 pred <- predict(lmfit, test, type = "response")
     ypred <- ifelse(pred > 0.5, 1, 0)
     accuracy <- length(ypred[test$win==ypred]) / length(ypred)
     #print(sprintf("predictors: %s", predictors))
     print(sprintf("Test prediction accuracy: %f", accuracy))
     print(" ")
+=======
+car::vif(lmfit)
+>>>>>>> d1c88b3038f5170542c54e8aace5a377a7139dd8
 ```
 
-```{r}
 
+<<<<<<< HEAD
 lmfit2 <- glm(win ~ age_dif + reach_dif + avg_opp_CTRL_time.seconds._dif + weightclass + avg_TD_att_dif + win_by_Decision_Split_dif , data = train, family="binomial")
 
 ```
@@ -524,3 +401,12 @@ pred <- predict(lmfit2, test, type = "response")
     print(sprintf("Test prediction accuracy: %f", accuracy))
     print(" ")
 ```
+=======
+# ROC Curve
+
+```{r}
+library(pROC)
+test_prob = predict(lmfit, newdata = test, type = "response")
+test_roc = roc(test$win ~ test_prob, plot = TRUE, print.auc = TRUE)
+```
+>>>>>>> d1c88b3038f5170542c54e8aace5a377a7139dd8
