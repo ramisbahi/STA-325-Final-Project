@@ -353,6 +353,11 @@ pred <- predict(lmfit, test, type = "response")
 # Model Diagnostics
 
 ```{r}
+car::vif(lmfit)
+```
+
+
+```{r}
 table(ypred, test$win)
 ```
 
