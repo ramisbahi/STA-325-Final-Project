@@ -350,6 +350,14 @@ pred <- predict(lmfit, test, type = "response")
     print(" ")
 ```
 
+```{r}
+pred <- predict(lmfit, test, type = "response")
+    ypred <- ifelse(pred > 0.5, 1, 0)
+    accuracy <- length(ypred[test$win==ypred]) / length(ypred)
+    #print(sprintf("predictors: %s", predictors))
+    print(sprintf("Test prediction accuracy: %f", accuracy))
+```
+
 # Model Diagnostics
 
 ```{r}
@@ -373,15 +381,6 @@ lmfit.data %>% top_n(3, .cooksd)
 ggplot(lmfit.data, aes(index, .std.resid)) + 
   geom_point(aes(color = win), alpha = .5) +
   theme_bw()
-```
-
-```{r}
-pred <- predict(lmfit, test, type = "response")
-    ypred <- ifelse(pred > 0.5, 1, 0)
-    accuracy <- length(ypred[test$win==ypred]) / length(ypred)
-    #print(sprintf("predictors: %s", predictors))
-    print(sprintf("Test prediction accuracy: %f", accuracy))
-    print(" ")
 ```
 
 # ROC Curve
