@@ -506,6 +506,31 @@ pred <- predict(lmfit, test, type = "response")
     print(" ")
 ```
 
-```{r}
+# Model Diagnostics
 
+```{r}
+plot(lmfit, which = 4, id.n = 3)
+
+# Extract model results
+lmfit.data <- augment(lmfit) %>% 
+  mutate(index = 1:n())
+
+lmfit.data %>% top_n(3, .cooksd)
+
+ggplot(lmfit.data, aes(index, .std.resid)) + 
+  geom_point(aes(color = win), alpha = .5) +
+  theme_bw()
+```
+
+```{r}
+car::vif(lmfit)
+```
+
+
+# ROC Curve
+
+```{r}
+library(pROC)
+test_prob = predict(lmfit, newdata = test, type = "response")
+test_roc = roc(test$win ~ test_prob, plot = TRUE, print.auc = TRUE)
 ```
